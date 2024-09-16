@@ -108,7 +108,70 @@ $ python3 funasr_client.py --host "127.0.0.1" --port 10095 --hotword hotword.txt
     $ python3 funasr_client.py --host "127.0.0.1" --port 10095 --hotword hotword.txt --llamahost "172.20.10.2:11434" --llm_model "qwen:7b"
     ```
 
+## Install CosyVoice
+
+Follow the tutorial: [CosyVoice](https://github.com/FunAudioLLM/CosyVoice)
+
+- Cuda 11.8 torch and torchaudio:
+    ```bash
+    pip install torch==2.0.1 --index-url https://download.pytorch.org/whl/cu118
+    ```
+
+- If you want to clone audio, transfrom audio file recored from windows recorder:
+    ```bash
+    $ ffmpeg -i input.m4a output.wav
+    ```
+
+- ONNX Runtime Issue: onnxruntime::Provider& onnxruntime::ProviderLibrary::Get() [ONNXRuntimeError] : 1 : FAIL : Failed to load library libonnxruntime_providers_cuda.so with error: libcufft.so.10: cannot open shared object file: No such file or directory
+    ```bash
+    $ pip3 install onnxruntime-gpu==1.18.1 -i https://mirrors.aliyun.com/pypi/simple/
+    $ pip3 install onnxruntime==1.18.1 -i https://mirrors.aliyun.com/pypi/simple/
+    ```
+
+- version `GLIBCXX_3.4.29‘ not found
+    ```bash
+    find ~ -name "libstdc++.so.6*"
+    strings .conda/envs/cosyvoice/lib/libstdc++.so.6 | grep -i "glibcxx"
+    sudo cp .conda/envs/cosyvoice/lib/libstdc++.so.6.0.33 /lib/x86_64-linux-gnu
+    sudo rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+    sudo ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+    ```
+
+### Server and client
+
+```bash
+# 安装依赖
+$ cd runtime/python/grpc && python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. cosyvoice.proto
+
+# 将文字请求发送至server，并返回语音文件 demo.wav
+$ python3 runtime/python/grpc/server.py --port 50000 --max_conc 4 --model_dir pretrained_models/CosyVoice-300M && sleep infinit
+$ python3 runtime/python/grpc/client.py --port 50000 --mode sft
+
+# Fast API
+$ python3 runtime/python/fastapi/server.py --port 50000 --model_dir pretrained_models/CosyVoice-300M && sleep infinity
+$ python3 runtime/python/fastapi/client.py --port 50000 --mode sft
+```
+
+### TODO
+
+Streaming...
+
+### Play the audio in python
+
+```py
+import simpleaudio as sa
+ 
+# 加载音频文件
+filename = 'demo.wav'
+wave_obj = sa.WaveObject.from_wave_file(filename)
+ 
+# 播放音频
+play_obj = wave_obj.play()
+play_obj.wait_done()
+```
+
 ## References
 
 - [Ollama PyPI](https://pypi.org/project/ollama/)
 - [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md)
+- [version `GLIBCXX_3.4.29‘ not found](https://blog.csdn.net/tianya_lu/article/details/140048604)
