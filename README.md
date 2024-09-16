@@ -44,7 +44,7 @@ I20240915 21:57:20.648572    56 funasr-wss-server-2pass.cpp:568] asr model init 
 
 ### Ollama
 
-Download and install ollama in windows. After that, run `ollama run llama3.1` in the Powershell to download the model. Then start the ollama server:
+Download and install ollama in windows. After that, run `ollama run llama3.1` or `ollama run qwen:7b` in the Powershell to download the model. Then start the ollama server:
 
 ```bash
 $ ollama serve
@@ -81,32 +81,32 @@ Run the script:
 
 ```bash
 $ pip3 install websockets pyaudio ollama
-$ python3 funasr_client.py --host "127.0.0.1" --port 10095 --hotword hotword.txt --powershell 1
+$ python3 funasr_client.py --host "127.0.0.1" --port 10095 --hotword hotword.txt --powershell 1 --llm_mode llama3.1 --llamahost "localhost:11434"
 ```
 
 ![](/imgs/demo.png)
 
 ## Deploy in WSL
 
-The ollama server should start from WSL. Otherwise, the requests from WSL cannot access ollama server. Install ollama in Ubuntu:
+- If ollama runs in the Windows host, you should enable wsl to access it in LAN (For other devices, this should also be enabled). In Powershell:
+    ```bash
+    $ [Environment]::SetEnvironmentVariable('OLLAMA_HOST', '0.0.0.0:11434', 'Process')
+    $ [Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS', '*', 'Process')
+    $ ollama serve
+    ```
 
-```bash
-$ curl -fsSL https://ollama.com/install.sh | sh
-$ ollama run llama3.1
-$ ollama serve
-```
+- Run `ipconfig` in Poweshell to get the IPv4 of Host, for example: `172.20.10.2`.
 
-> The audio may not work due to the audio card. A way to solve the problem:
+- The audio may not work due to the audio card. A way to solve the problem:
+    ```bash
+    $ sudo apt-get install python3-pyaudio pulseaudio portaudio19-dev
+    ```
 
-```bash
-sudo apt-get install python3-pyaudio pulseaudio portaudio19-dev
-```
-
-Run the scripts:
-
-```bash
-$ python3 funasr_client.py --host "127.0.0.1" --port 10095 --hotword hotword.txt
-```
+- Run the scripts:
+    ```bash
+    $ pip3 install websockets pyaudio ollama
+    $ python3 funasr_client.py --host "127.0.0.1" --port 10095 --hotword hotword.txt --llamahost "172.20.10.2:11434" --llm_model "qwen:7b"
+    ```
 
 ## References
 

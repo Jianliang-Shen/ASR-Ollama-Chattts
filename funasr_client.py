@@ -4,7 +4,7 @@ import websockets, ssl
 import asyncio
 import argparse
 import json
-import ollama
+from ollama import Client
 import logging
 from multiprocessing import Process
 
@@ -19,6 +19,8 @@ parser.add_argument("--hotword", type=str, default="", help="hotword file path, 
 parser.add_argument("--words_max_print", type=int, default=10000, help="chunk")
 parser.add_argument("--use_itn", type=int, default=1, help="1 for using itn, 0 for not itn")
 parser.add_argument("--powershell", type=int, default=0, help="work under powershell")
+parser.add_argument("--llamahost", type=str, default="0.0.0.0:11434", help="Ollama server")
+parser.add_argument("--llm_model", type=str, default="llama3.1", help="Ollama model")
 
 args = parser.parse_args()
 args.chunk_size = [int(x) for x in args.chunk_size.split(",")]
@@ -100,7 +102,8 @@ async def wait_end_and_send_to_ollama():
 
             print("\n\nAssistant: ")
             messages.append({'role': 'user', 'content': prompt})
-            stream = ollama.chat(model='llama3.1', messages=messages, stream=True)
+            client = Client(host='http://' + args.llamahost)
+            stream = client.chat(model=args.llm_model, messages=messages, stream=True)
             for chunk in stream:
                 assistant_log += chunk['message']['content']
                 print(chunk['message']['content'], end='', flush=True)
